@@ -1,0 +1,20 @@
+<resources>
+  <string name="app_name">Stock Hawk</string>
+
+  <string name="action_example">Example action</string>
+
+  <string name="action_settings">Settings</string>
+  <string name="action_change_units">Change Units</string>
+  <string name="network_toast">Uh-oh! This app requires an internet connection</string>
+
+  <!-- Add Stock Dialog -->
+  <string name="asd_title">Symbol Search</string>
+  <string name="asd_content">Search for a Stock Symbol</string>
+  <string name="asd_hint">FB</string>
+  <string name="asd_prefill"></string>
+  <string name="asd_stock_present_message">"This stock is already saved!"</string>
+
+  <!-- GCM Service Toast -->
+  <string name="gcms_unrecognised_stock_symbol">Unrecognised Stock Symbol</string>
+
+</resources>
