@@ -104,7 +104,7 @@ public final class NetworkUtils {
         builder.backgroundColor(backgroundColour);
         builder.title(R.string.asd_title);
         builder.content(R.string.asd_content);
-        builder.inputType(InputType.TYPE_CLASS_TEXT);
+        builder.inputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
         builder.input(R.string.asd_hint, R.string.asd_prefill, callback);
 
         return builder.build();

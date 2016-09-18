@@ -1,11 +1,15 @@
 package com.sam_chordas.android.stockhawk.ui;
 
 import android.app.LoaderManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.os.Bundle;
@@ -23,6 +27,7 @@ import android.widget.Toast;
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
+import com.sam_chordas.android.stockhawk.model.DetailStockModel;
 import com.sam_chordas.android.stockhawk.rest.QuoteCursorAdapter;
 import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.service.DetailedStockTaskIntentService;
@@ -39,7 +44,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
 
-public class MyStocksActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
+public class MyStocksActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>, QuoteCursorAdapter.Callbacks{
 
     private static final int CURSOR_LOADER_ID = 0;
 
@@ -55,6 +60,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     boolean isConnected;
 
     private CardView mHiddenLayout;
+
+    private Cursor mCursor = null;
 
     private static final String BASE_URL = "https://query.yahooapis.com/v1/public/yql?q=";
     //private static final String SELECT_PREFIX = "select * from yahoo.finance.historicaldata where ";
@@ -101,6 +108,12 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         fab.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
 
+//                if (mHiddenLayout.getVisibility() == View.VISIBLE) {
+//                    mHiddenLayout.setVisibility(View.GONE);
+//                } else if (mHiddenLayout.getVisibility() == View.GONE) {
+//                    mHiddenLayout.setVisibility(View.VISIBLE);
+//                }
+
                 if (isConnected) {
                     NetworkUtils.buildAddStockSymbolDialog(MyStocksActivity.this).show();
                 } else {
@@ -135,6 +148,22 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     public void onResume() {
         super.onResume();
         getLoaderManager().restartLoader(CURSOR_LOADER_ID, null, this);
+        IntentFilter filter = new IntentFilter(DetailedStockTaskIntentService.ACTION_COMPLETE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(launchDetailActivityReceiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(launchDetailActivityReceiver);
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(mCursor != null && !mCursor.isClosed()) {
+            mCursor.close();
+        }
     }
 
     public void restoreActionBar() {
@@ -219,5 +248,41 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                 .setRequiresCharging(false)
                 .build();
     }
+
+    @Override
+    public void onItemClick(int position) {
+
+        mCursor = mCursorAdapter.getCursor();
+
+        mCursor.moveToPosition(position);
+
+        final String symbol = mCursor.getString(mCursor.getColumnIndex(QuoteColumns.SYMBOL));
+        final String bid = mCursor.getString(mCursor.getColumnIndex(QuoteColumns.BIDPRICE));
+        final String percentChange = mCursor.getString(mCursor.getColumnIndex(QuoteColumns.PERCENT_CHANGE));
+        final String change = mCursor.getString(mCursor.getColumnIndex(QuoteColumns.CHANGE));
+        final boolean isUp = (mCursor.getInt(mCursor.getColumnIndex(QuoteColumns.IS_UP)) == 1);
+
+        Intent launchDetailedService =
+                new Intent(this, DetailedStockTaskIntentService.class);
+        launchDetailedService.putExtra(DetailedStockTaskIntentService.KEY_SYMBOL, symbol);
+        launchDetailedService.putExtra(DetailedStockTaskIntentService.KEY_BID, bid);
+        launchDetailedService.putExtra(DetailedStockTaskIntentService.KEY_PERCENT_CHANGE, percentChange);
+        launchDetailedService.putExtra(DetailedStockTaskIntentService.KEY_CHANGE, change);
+        launchDetailedService.putExtra(DetailedStockTaskIntentService.KEY_IS_UP, isUp);
+
+        startService(launchDetailedService);
+
+    }
+
+    private final BroadcastReceiver launchDetailActivityReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final DetailStockModel model =
+                    intent.getParcelableExtra(DetailedStockTaskIntentService.STOCK_DETAIL_EXTRA_KEY);
+            Intent launchDetailActivity = new Intent(context, DetailStocksActivity.class);
+            launchDetailActivity.putExtra(DetailedStockTaskIntentService.STOCK_DETAIL_EXTRA_KEY, model);
+            startActivity(launchDetailActivity);
+        }
+    };
 
 }

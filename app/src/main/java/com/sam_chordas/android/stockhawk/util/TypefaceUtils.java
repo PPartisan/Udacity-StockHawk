@@ -11,4 +11,8 @@ public final class TypefaceUtils {
         return Typeface.createFromAsset(manager, "fonts/Roboto-Light.ttf");
     }
 
+    public static Typeface getRobotoRegularTypeface(AssetManager manager) {
+        return Typeface.createFromAsset(manager, "fonts/Roboto-Regular.ttf");
+    }
+
 }

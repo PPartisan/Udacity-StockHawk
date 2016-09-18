@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.support.v7.widget.RecyclerView;
+import android.telecom.Call;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,14 +30,24 @@ import com.sam_chordas.android.stockhawk.util.ViewUtils;
  * for the code structure
  */
 public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAdapter.ViewHolder>
-        implements ItemTouchHelperAdapter{
+        implements ItemTouchHelperAdapter {
 
     private final ContentResolver mContentResolver;
     private final Typeface mRobotoLightTypeface;
+    private final Callbacks mCallbacks;
 //    private boolean isPercent;
 
     public QuoteCursorAdapter(Context context, Cursor cursor){
         super(context, cursor);
+
+        try {
+            mCallbacks = (Callbacks) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(
+                    context.toString() + " must implement " + Callbacks.class.getSimpleName()
+            );
+        }
+
         mContentResolver = context.getContentResolver();
         mRobotoLightTypeface = TypefaceUtils.getRobotoLightTypeface(context.getAssets());
     }
@@ -44,7 +55,7 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType){
         View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_quote, parent, false);
-        return new ViewHolder(itemView, mRobotoLightTypeface);
+        return new ViewHolder(itemView, mRobotoLightTypeface, mCallbacks);
     }
 
     @Override
@@ -87,12 +98,16 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
         final TextView bidPrice;
         final TextView change;
 
-        public ViewHolder(View itemView, Typeface robotoLight){
+        private final Callbacks mCallbacks;
+
+        public ViewHolder(View itemView, Typeface robotoLight, Callbacks callbacks){
             super(itemView);
             symbol = (TextView) itemView.findViewById(R.id.stock_symbol);
             symbol.setTypeface(robotoLight);
             bidPrice = (TextView) itemView.findViewById(R.id.bid_price);
             change = (TextView) itemView.findViewById(R.id.change);
+
+            mCallbacks = callbacks;
 
             itemView.setOnClickListener(this);
         }
@@ -109,12 +124,13 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
 
         @Override
         public void onClick(View v) {
-            Log.d(getClass().getSimpleName(), "Click Registered at " + getAdapterPosition());
-            Intent launchDetailedService = new Intent(v.getContext(), DetailedStockTaskIntentService.class);
-            launchDetailedService.putExtra(DetailedStockTaskIntentService.KEY_SYMBOL, symbol.getText().toString());
-            v.getContext().startService(launchDetailedService);
+            mCallbacks.onItemClick(getAdapterPosition());
         }
 
+    }
+
+    public interface Callbacks {
+        void onItemClick(int position);
     }
 
 }

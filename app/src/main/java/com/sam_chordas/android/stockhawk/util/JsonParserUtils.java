@@ -21,7 +21,7 @@ public final class JsonParserUtils {
 
     private JsonParserUtils() { throw new AssertionError(); }
 
-    public static DetailStockModel getDetailedStockModelFromJson(String jsonString) throws JSONException, ParseException {
+    public static DetailStockModel.Builder getDetailedStockModelBuilderFromJson(String jsonString) throws JSONException, ParseException {
 
         final JSONArray quote = new JSONObject(jsonString)
                 .getJSONObject(KEY_DETAIL_QUERY)
@@ -39,7 +39,7 @@ public final class JsonParserUtils {
             builder.addDay(Day.buildDay(date, open));
         }
 
-        return builder.build();
+        return builder;
 
     }
 
