@@ -6,7 +6,6 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.widget.RemoteViews;
 
 import com.sam_chordas.android.stockhawk.R;
@@ -21,7 +20,6 @@ public class StockWidgetProvider extends AppWidgetProvider {
 
             Intent serviceIntent = new Intent(context, StockWidgetService.class);
             serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id);
-            serviceIntent.setData(Uri.parse(serviceIntent.toUri(Intent.URI_INTENT_SCHEME)));
 
             RemoteViews widget = new RemoteViews(context.getPackageName(), R.layout.stock_widget);
 
