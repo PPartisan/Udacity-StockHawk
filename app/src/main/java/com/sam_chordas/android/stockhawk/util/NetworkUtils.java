@@ -34,8 +34,6 @@ public final class NetworkUtils {
 
     public static String getJsonString(String urlString) {
 
-        Log.d(TAG, "in getJsonString");
-
         HttpURLConnection connection = null;
         BufferedReader reader = null;
 

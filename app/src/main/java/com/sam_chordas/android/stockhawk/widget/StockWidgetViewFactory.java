@@ -1,6 +1,5 @@
 package com.sam_chordas.android.stockhawk.widget;
 
-import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;

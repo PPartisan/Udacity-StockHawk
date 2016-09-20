@@ -67,7 +67,7 @@ public class StockTaskService extends GcmTaskService{
 
     @Override
     public int onRunTask(TaskParams params){
-        Cursor initQueryCursor;
+        Cursor initQueryCursor = null;
         int result = GcmNetworkManager.RESULT_FAILURE;
 
         StringBuilder urlStringBuilder = new StringBuilder();
@@ -89,49 +89,53 @@ public class StockTaskService extends GcmTaskService{
                 return result;
             }
 
-            initQueryCursor = mContext.getContentResolver().query(
-                    QuoteProvider.Quotes.CONTENT_URI,
-                    new String[] { "Distinct " + QuoteColumns.SYMBOL },
-                    null, null, null);
+            try {
+                initQueryCursor = mContext.getContentResolver().query(
+                        QuoteProvider.Quotes.CONTENT_URI,
+                        new String[]{"Distinct " + QuoteColumns.SYMBOL},
+                        null, null, null);
 
-            if (initQueryCursor == null || initQueryCursor.getCount() == 0){
-                // Init task. Populates DB with quotes for the symbols seen below
-                try {
-                    urlStringBuilder.append(
-                            URLEncoder.encode(DEFAULT_QUOTES, "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
+                if (initQueryCursor == null || initQueryCursor.getCount() == 0) {
+                    // Init task. Populates DB with quotes for the symbols seen below
+                    try {
+                        urlStringBuilder.append(
+                                URLEncoder.encode(DEFAULT_QUOTES, "UTF-8"));
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+
+                } else {
+
+                    //DatabaseUtils.dumpCursor(initQueryCursor);
+
+                    initQueryCursor.moveToFirst();
+
+                    final int symbolColumnIndex =
+                            initQueryCursor.getColumnIndex(SYMBOL);
+
+                    for (int i = 0; i < initQueryCursor.getCount(); i++) {
+
+                        initQueryCursor.moveToPosition(i);
+
+                        final String symbol = initQueryCursor.getString(symbolColumnIndex);
+
+                        mStoredSymbols.append("\"");
+                        mStoredSymbols.append(symbol);
+                        mStoredSymbols.append("\",");
+
+                    }
+
+                    mStoredSymbols.replace(mStoredSymbols.length() - 1, mStoredSymbols.length(), ")");
+
+                    try {
+                        urlStringBuilder.append(URLEncoder.encode(mStoredSymbols.toString(), "UTF-8"));
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+
                 }
-
-            } else {
-
-                //DatabaseUtils.dumpCursor(initQueryCursor);
-
-                initQueryCursor.moveToFirst();
-
-                final int symbolColumnIndex =
-                        initQueryCursor.getColumnIndex(SYMBOL);
-
-                for (int i = 0; i < initQueryCursor.getCount(); i++){
-
-                    initQueryCursor.moveToPosition(i);
-
-                    final String symbol = initQueryCursor.getString(symbolColumnIndex);
-
-                    mStoredSymbols.append("\"");
-                    mStoredSymbols.append(symbol);
-                    mStoredSymbols.append("\",");
-
-                }
-
-                mStoredSymbols.replace(mStoredSymbols.length() - 1, mStoredSymbols.length(), ")");
-
-                try {
-                    urlStringBuilder.append(URLEncoder.encode(mStoredSymbols.toString(), "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-
+            } finally {
+                if (initQueryCursor != null && !initQueryCursor.isClosed()) initQueryCursor.close();
             }
 
         } else if (params.getTag().equals(ADD)){
