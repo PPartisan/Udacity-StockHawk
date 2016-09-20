@@ -5,7 +5,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.util.Log;
@@ -69,8 +68,10 @@ public class StockTaskService extends GcmTaskService{
     @Override
     public int onRunTask(TaskParams params){
         Cursor initQueryCursor;
+        int result = GcmNetworkManager.RESULT_FAILURE;
 
         StringBuilder urlStringBuilder = new StringBuilder();
+
         try{
             // Base URL for the Yahoo query
             urlStringBuilder.append(BASE_URL);
@@ -83,6 +84,10 @@ public class StockTaskService extends GcmTaskService{
                 params.getTag().equals(PERIODIC)){
 
             isUpdate = true;
+
+            if(mContext == null) {
+                return result;
+            }
 
             initQueryCursor = mContext.getContentResolver().query(
                     QuoteProvider.Quotes.CONTENT_URI,
@@ -100,7 +105,7 @@ public class StockTaskService extends GcmTaskService{
 
             } else {
 
-                DatabaseUtils.dumpCursor(initQueryCursor);
+                //DatabaseUtils.dumpCursor(initQueryCursor);
 
                 initQueryCursor.moveToFirst();
 
@@ -135,9 +140,7 @@ public class StockTaskService extends GcmTaskService{
             // get symbol from params.getExtra and build query
             String stockInput = params.getExtras().getString(SYMBOL);
             try {
-                Log.d(getClass().getSimpleName(), urlStringBuilder.toString());
                 urlStringBuilder.append(URLEncoder.encode("\""+stockInput+"\")", "UTF-8"));
-                Log.d(getClass().getSimpleName(), urlStringBuilder.toString());
             } catch (UnsupportedEncodingException e){
                 e.printStackTrace();
             }
@@ -148,17 +151,20 @@ public class StockTaskService extends GcmTaskService{
         String urlString;
         String getResponse;
 
-        int result = GcmNetworkManager.RESULT_FAILURE;
-
         urlString = urlStringBuilder.toString();
         try{
             getResponse = fetchData(urlString);
             result = GcmNetworkManager.RESULT_SUCCESS;
             try {
                 ContentValues contentValues = new ContentValues();
-                // update IS_CURRENT to 0 (false) so new data is current
+                // updateStockWidget IS_CURRENT to 0 (false) so new data is current
                 if (isUpdate){
                     contentValues.put(QuoteColumns.IS_CURRENT, 0);
+
+                    if (mContext == null) {
+                        return result;
+                    }
+
                     mContext.getContentResolver().update(QuoteProvider.Quotes.CONTENT_URI, contentValues,
                             null, null);
                 }

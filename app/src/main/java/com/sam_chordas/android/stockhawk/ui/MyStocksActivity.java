@@ -1,33 +1,24 @@
 package com.sam_chordas.android.stockhawk.ui;
 
 import android.app.LoaderManager;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.Loader;
 import android.database.Cursor;
-import android.net.Uri;
-import android.support.v4.content.LocalBroadcastManager;
+import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.os.Bundle;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.Toast;
 
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
-import com.sam_chordas.android.stockhawk.model.DetailStockModel;
 import com.sam_chordas.android.stockhawk.rest.QuoteCursorAdapter;
 import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.service.DetailedStockTaskIntentService;
@@ -39,12 +30,11 @@ import com.google.android.gms.gcm.Task;
 import com.melnykov.fab.FloatingActionButton;
 import com.sam_chordas.android.stockhawk.touch_helper.SimpleItemTouchHelperCallback;
 import com.sam_chordas.android.stockhawk.util.NetworkUtils;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLEncoder;
+import com.sam_chordas.android.stockhawk.widget.StockWidgetProvider;
 
 public class MyStocksActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>, QuoteCursorAdapter.Callbacks{
+
+    private static final String RECYCLERVIEW_STATE_KEY = "recycler_view_state_key";
 
     private static final int CURSOR_LOADER_ID = 0;
 
@@ -59,18 +49,10 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     private QuoteCursorAdapter mCursorAdapter;
     boolean isConnected;
 
-    private CardView mHiddenLayout;
-
     private Cursor mCursor = null;
 
-    private static final String BASE_URL = "https://query.yahooapis.com/v1/public/yql?q=";
-    //private static final String SELECT_PREFIX = "select * from yahoo.finance.historicaldata where ";
-    private static final String SELECT_PREFIX="%20select%20*%20from%20yahoo.finance.historicaldata%20where%20";
-    private static final String SUFFIX_URL =
-            "&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=";
-    private static final String SYMBOL_CLAUSE = "symbol = ";
-    private static final String START_DATE_CLAUSE = " and startDate = ";
-    private static final String END_DATE_CLAUSE = " and endDate = ";
+    private RecyclerView.LayoutManager mLayoutManager;
+    private Parcelable mListState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,10 +76,10 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
             }
         }
 
-        mHiddenLayout = (CardView) findViewById(R.id.hidden_layout);
-
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        EmptyRecyclerView recyclerView = (EmptyRecyclerView) findViewById(R.id.recycler_view);
+        mLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setEmptyView(findViewById(R.id.ams_empty_view));
         getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
 
         mCursorAdapter = new QuoteCursorAdapter(this, null);
@@ -107,12 +89,6 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         fab.attachToRecyclerView(recyclerView);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-
-//                if (mHiddenLayout.getVisibility() == View.VISIBLE) {
-//                    mHiddenLayout.setVisibility(View.GONE);
-//                } else if (mHiddenLayout.getVisibility() == View.GONE) {
-//                    mHiddenLayout.setVisibility(View.VISIBLE);
-//                }
 
                 if (isConnected) {
                     NetworkUtils.buildAddStockSymbolDialog(MyStocksActivity.this).show();
@@ -143,19 +119,26 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        mListState = mLayoutManager.onSaveInstanceState();
+        outState.putParcelable(RECYCLERVIEW_STATE_KEY, mListState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            mListState = savedInstanceState.getParcelable(RECYCLERVIEW_STATE_KEY);
+        }
+    }
 
     @Override
     public void onResume() {
         super.onResume();
         getLoaderManager().restartLoader(CURSOR_LOADER_ID, null, this);
-        IntentFilter filter = new IntentFilter(DetailedStockTaskIntentService.ACTION_COMPLETE);
-        LocalBroadcastManager.getInstance(this).registerReceiver(launchDetailActivityReceiver, filter);
-    }
-
-    @Override
-    protected void onPause() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(launchDetailActivityReceiver);
-        super.onPause();
+        if(mListState != null) mLayoutManager.onRestoreInstanceState(mListState);
     }
 
     @Override
@@ -173,7 +156,6 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         }
 
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setTitle(mTitle);
     }
@@ -230,6 +212,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data){
         mCursorAdapter.swapCursor(data);
+        StockWidgetProvider.updateStockWidget(this);
     }
 
     @Override
@@ -262,27 +245,15 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         final String change = mCursor.getString(mCursor.getColumnIndex(QuoteColumns.CHANGE));
         final boolean isUp = (mCursor.getInt(mCursor.getColumnIndex(QuoteColumns.IS_UP)) == 1);
 
-        Intent launchDetailedService =
-                new Intent(this, DetailedStockTaskIntentService.class);
-        launchDetailedService.putExtra(DetailedStockTaskIntentService.KEY_SYMBOL, symbol);
-        launchDetailedService.putExtra(DetailedStockTaskIntentService.KEY_BID, bid);
-        launchDetailedService.putExtra(DetailedStockTaskIntentService.KEY_PERCENT_CHANGE, percentChange);
-        launchDetailedService.putExtra(DetailedStockTaskIntentService.KEY_CHANGE, change);
-        launchDetailedService.putExtra(DetailedStockTaskIntentService.KEY_IS_UP, isUp);
+        Intent launchDetailActivity = new Intent(this, DetailStocksActivity.class);
+        launchDetailActivity.putExtra(DetailedStockTaskIntentService.KEY_SYMBOL, symbol);
+        launchDetailActivity.putExtra(DetailedStockTaskIntentService.KEY_BID, bid);
+        launchDetailActivity.putExtra(DetailedStockTaskIntentService.KEY_PERCENT_CHANGE, percentChange);
+        launchDetailActivity.putExtra(DetailedStockTaskIntentService.KEY_CHANGE, change);
+        launchDetailActivity.putExtra(DetailedStockTaskIntentService.KEY_IS_UP, isUp);
 
-        startService(launchDetailedService);
+        startActivity(launchDetailActivity);
 
     }
-
-    private final BroadcastReceiver launchDetailActivityReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            final DetailStockModel model =
-                    intent.getParcelableExtra(DetailedStockTaskIntentService.STOCK_DETAIL_EXTRA_KEY);
-            Intent launchDetailActivity = new Intent(context, DetailStocksActivity.class);
-            launchDetailActivity.putExtra(DetailedStockTaskIntentService.STOCK_DETAIL_EXTRA_KEY, model);
-            startActivity(launchDetailActivity);
-        }
-    };
 
 }

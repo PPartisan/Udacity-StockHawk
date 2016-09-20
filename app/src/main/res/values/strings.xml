@@ -8,11 +8,21 @@
     <string name="action_change_units">Change Units</string>
     <string name="network_toast">Uh-oh! This app requires an internet connection</string>
 
+    <!-- MyStocksActivity-->
+    <string name="ams_empty_view_content">No Stocks Available</string>
+    <string name="ams_content_desc_add_new_stock">Add New Stock</string>
+
+    <!-- MyStocksActivity - RecyclerView Item -->
+    <string name="ams_rvi_content_desc_symbol">Stock Symbol: %1$s</string>
+    <string name="ams_rvi_content_desc_bid">Bid Price for %1$s is %2$s</string>
+    <string name="ams_rvi_content_desc_change">Change for %1$s is %2$s</string>
+    <string name="ams_rvi_content_des_change_per">Percent Change  for %1$s is %2$s</string>
+
     <!-- Add Stock Dialog -->
     <string name="asd_title">Symbol Search</string>
     <string name="asd_content">Search for a Stock Symbol</string>
-    <string name="asd_hint">FB</string>
-    <string name="asd_prefill"></string>
+    <string name="asd_hint" translatable="false">FB</string>
+    <string name="asd_prefill" translatable="false"></string>
     <string name="asd_stock_present_message">"This stock is already saved!"</string>
 
     <!-- GCM Service Toast -->
@@ -22,5 +32,13 @@
     <string name="alg_title">Showing stock values for dates %1$s to %2$s</string>
     <string name="alg_date">Date: %1$s</string>
     <string name="alg_open">Open: %1$.2f</string>
+    <string name="alg_line_chart_loading">Loading…</string>
+    <string name="alg_line_chart_no_data">No Data</string>
+    <string name="alg_bid_title">Bid</string>
+    <string name="alg_change_title">Change</string>
+    <string name="alg_percent_change_title">Change (%)</string>
+
+    <!-- Widget -->
+    <string name="sw_empty">No Stock Data Available</string>
 
 </resources>

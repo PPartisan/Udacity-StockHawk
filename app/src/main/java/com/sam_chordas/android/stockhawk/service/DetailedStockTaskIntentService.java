@@ -3,7 +3,6 @@ package com.sam_chordas.android.stockhawk.service;
 import android.app.IntentService;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 import com.sam_chordas.android.stockhawk.model.DetailStockModel;
 import com.sam_chordas.android.stockhawk.util.JsonParserUtils;
@@ -23,6 +22,7 @@ public class DetailedStockTaskIntentService extends IntentService {
     private static final String TAG = DetailedStockTaskIntentService.class.getSimpleName();
 
     public static final String ACTION_COMPLETE = TAG + ".COMPLETE";
+
     public static final String STOCK_DETAIL_EXTRA_KEY = "stock_detail_extra_key";
 
     public static final String KEY_SYMBOL = "key_symbol";
@@ -34,7 +34,8 @@ public class DetailedStockTaskIntentService extends IntentService {
     private static final String BASE_URL = "https://query.yahooapis.com/v1/public/yql?q=";
     private static final String SELECT_PREFIX = "select * from yahoo.finance.historicaldata where ";
     private static final String SUFFIX_URL =
-            "&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=";
+            "&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org" +
+                    "%2Falltableswithkeys&callback=";
     private static final String SYMBOL_CLAUSE = "symbol";
     private static final String START_DATE_CLAUSE = "startDate";
     private static final String END_DATE_CLAUSE = "endDate";
@@ -55,29 +56,15 @@ public class DetailedStockTaskIntentService extends IntentService {
     protected void onHandleIntent(Intent intent) {
 
         final String symbol = intent.getStringExtra(KEY_SYMBOL);
-        final String bid = intent.getStringExtra(KEY_BID);
-        final String percentChange = intent.getStringExtra(KEY_PERCENT_CHANGE);
-        final String change = intent.getStringExtra(KEY_CHANGE);
-        final boolean isUp = intent.getBooleanExtra(KEY_IS_UP, false);
 
         final String requestUrl = buildRequestString(symbol);
 
-        Log.d(getClass().getSimpleName(), requestUrl);
-
         final String resultString = NetworkUtils.getJsonString(requestUrl);
+
         try {
 
-            DetailStockModel.Builder builder =
-                    JsonParserUtils.getDetailedStockModelBuilderFromJson(resultString);
-
-            final DetailStockModel model = builder
-                    .symbol(symbol)
-                    .bid(bid)
-                    .percentChange(percentChange)
-                    .change(change)
-                    .isUp(isUp)
-                    .reverseDays()
-                    .build();
+            DetailStockModel model =
+                    JsonParserUtils.getDetailedStockModelFromJson(resultString, true);
 
             Intent resultIntent = new Intent(ACTION_COMPLETE);
             resultIntent.putExtra(STOCK_DETAIL_EXTRA_KEY, model);

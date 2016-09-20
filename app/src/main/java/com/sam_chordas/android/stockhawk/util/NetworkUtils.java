@@ -34,21 +34,26 @@ public final class NetworkUtils {
 
     public static String getJsonString(String urlString) {
 
+        Log.d(TAG, "in getJsonString");
+
         HttpURLConnection connection = null;
         BufferedReader reader = null;
 
         String resultString = null;
 
         try {
+
             URL url = new URL(urlString);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.connect();
 
             InputStream inputStream = connection.getInputStream();
+
             if (inputStream == null) {
                 return null;
             }
+
             StringBuilder builder = new StringBuilder();
             reader = new BufferedReader(new InputStreamReader(inputStream));
 
@@ -63,8 +68,7 @@ public final class NetworkUtils {
             }
 
             resultString = builder.toString();
-
-        } catch (IOException e) {
+        } catch(IOException e) {
             e.printStackTrace();
             return null;
         } finally {
@@ -124,7 +128,7 @@ public final class NetworkUtils {
     private static void startStockIntentService(Context context, String symbol) {
         Intent serviceIntent = new Intent(context, StockIntentService.class);
         serviceIntent.putExtra(StockIntentService.KEY, StockIntentService.ADD);
-        serviceIntent.putExtra("symbol", symbol);
+        serviceIntent.putExtra(StockIntentService.SYMBOL, symbol);
         context.startService(serviceIntent);
     }
 

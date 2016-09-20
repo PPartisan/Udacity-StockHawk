@@ -2,13 +2,11 @@ package com.sam_chordas.android.stockhawk.rest;
 
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.support.v7.widget.RecyclerView;
-import android.telecom.Call;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,9 +15,9 @@ import android.widget.TextView;
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
-import com.sam_chordas.android.stockhawk.service.DetailedStockTaskIntentService;
 import com.sam_chordas.android.stockhawk.touch_helper.ItemTouchHelperAdapter;
 import com.sam_chordas.android.stockhawk.touch_helper.ItemTouchHelperViewHolder;
+import com.sam_chordas.android.stockhawk.util.AccessibilityUtils;
 import com.sam_chordas.android.stockhawk.util.TypefaceUtils;
 import com.sam_chordas.android.stockhawk.util.ViewUtils;
 
@@ -61,8 +59,24 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
     @Override
     public void onBindViewHolder(final ViewHolder viewHolder, final Cursor cursor){
 
-        viewHolder.symbol.setText(cursor.getString(cursor.getColumnIndex(QuoteColumns.SYMBOL)));
-        viewHolder.bidPrice.setText(cursor.getString(cursor.getColumnIndex(QuoteColumns.BIDPRICE)));
+        Resources res = viewHolder.itemView.getContext().getResources();
+
+        final String symbol = cursor.getString(cursor.getColumnIndex(QuoteColumns.SYMBOL));
+        final String bidPrice = cursor.getString(cursor.getColumnIndex(QuoteColumns.BIDPRICE));
+        final String change = cursor.getString(cursor.getColumnIndex(QuoteColumns.CHANGE));
+        final String percentChange = cursor.getString(cursor.getColumnIndex(QuoteColumns.PERCENT_CHANGE));
+
+        final String audibleSymbol = AccessibilityUtils.getStringAsAudibleCharacters(symbol);
+
+        viewHolder.symbol.setText(symbol);
+        viewHolder.symbol.setContentDescription(
+                res.getString(R.string.ams_rvi_content_desc_symbol, audibleSymbol)
+        );
+
+        viewHolder.bidPrice.setText(bidPrice);
+        viewHolder.bidPrice.setContentDescription(
+                res.getString(R.string.ams_rvi_content_desc_bid, audibleSymbol, bidPrice)
+        );
 
         final int isUp = cursor.getInt(cursor.getColumnIndex(QuoteColumns.IS_UP));
         final int pillResId = (isUp == 1)
@@ -72,9 +86,15 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
         ViewUtils.setViewBackgroundDrawable(viewHolder.change, pillResId);
 
         if (Utils.showPercent){
-            viewHolder.change.setText(cursor.getString(cursor.getColumnIndex(QuoteColumns.PERCENT_CHANGE)));
+            viewHolder.change.setText(percentChange);
+            viewHolder.change.setContentDescription(
+                    res.getString(R.string.ams_rvi_content_des_change_per, audibleSymbol, percentChange)
+            );
         } else{
-            viewHolder.change.setText(cursor.getString(cursor.getColumnIndex(QuoteColumns.CHANGE)));
+            viewHolder.change.setText(change);
+            viewHolder.change.setContentDescription(
+                    res.getString(R.string.ams_rvi_content_desc_change, audibleSymbol, change)
+            );
         }
 
     }
@@ -91,7 +111,7 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
         return super.getItemCount();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder
+    static class ViewHolder extends RecyclerView.ViewHolder
             implements ItemTouchHelperViewHolder, View.OnClickListener {
 
         final TextView symbol;
@@ -100,7 +120,7 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
 
         private final Callbacks mCallbacks;
 
-        public ViewHolder(View itemView, Typeface robotoLight, Callbacks callbacks){
+        ViewHolder(View itemView, Typeface robotoLight, Callbacks callbacks){
             super(itemView);
             symbol = (TextView) itemView.findViewById(R.id.stock_symbol);
             symbol.setTypeface(robotoLight);

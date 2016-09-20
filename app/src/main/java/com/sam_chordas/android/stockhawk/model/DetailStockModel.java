@@ -11,33 +11,13 @@ import java.util.Collections;
 import java.util.List;
 
 public final class DetailStockModel implements Parcelable {
-
-    public final String symbol, bid, percentChange, change;
-    public final boolean isUp;
     private final List<Day> days;
 
-    private DetailStockModel(
-            String symbol,
-            String bid,
-            String percentChange,
-            String change,
-            boolean isUp,
-            List<Day> days
-    ) {
-        this.symbol = symbol;
-        this.bid = bid;
-        this.percentChange = percentChange;
-        this.change = change;
-        this.isUp = isUp;
+    private DetailStockModel(List<Day> days) {
         this.days = days;
     }
 
     protected DetailStockModel(Parcel in) {
-        symbol = in.readString();
-        bid = in.readString();
-        percentChange = in.readString();
-        change = in.readString();
-        isUp = in.readByte() != 0;
         days = in.createTypedArrayList(Day.CREATOR);
     }
 
@@ -64,47 +44,15 @@ public final class DetailStockModel implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeString(symbol);
-        parcel.writeString(bid);
-        parcel.writeString(percentChange);
-        parcel.writeString(change);
-        parcel.writeByte((byte) (isUp ? 1 : 0));
         parcel.writeTypedList(days);
     }
 
     public static final class Builder {
 
-        private String symbol, bid, percentChange, change;
-        private boolean isUp;
         private List<Day> days;
 
         public Builder(int count) {
             days = new ArrayList<>(count);
-        }
-
-        public Builder symbol(String symbol) {
-            this.symbol = symbol.toUpperCase();
-            return this;
-        }
-
-        public Builder bid(String bid){
-            this.bid = bid;
-            return this;
-        }
-
-        public Builder percentChange(String percentChange) {
-            this.percentChange = percentChange;
-            return this;
-        }
-
-        public Builder change(String change) {
-            this.change = change;
-            return this;
-        }
-
-        public Builder isUp(boolean isUp) {
-            this.isUp = isUp;
-            return this;
         }
 
         public void addDay(Day day) {
@@ -117,7 +65,7 @@ public final class DetailStockModel implements Parcelable {
         }
 
         public DetailStockModel build() {
-            return new DetailStockModel(symbol, bid, percentChange, change, isUp, days);
+            return new DetailStockModel(days);
         }
 
     }
