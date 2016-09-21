@@ -30,7 +30,7 @@ public final class ViewUtils {
         return (int) (dp * Resources.getSystem().getDisplayMetrics().density);
     }
 
-    public static Toast makeLongToast(Context context, int messageId) {
+    static Toast makeLongToast(Context context, int messageId) {
         return Toast.makeText(context, messageId, Toast.LENGTH_LONG);
     }
 

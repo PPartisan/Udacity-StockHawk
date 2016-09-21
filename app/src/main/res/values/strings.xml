@@ -9,7 +9,7 @@
     <string name="network_toast">Uh-oh! This app requires an internet connection</string>
 
     <!-- MyStocksActivity-->
-    <string name="ams_empty_view_content">No Stocks Available</string>
+    <string name="ams_empty_view_content">No internet connection: unable to fetch stocks</string>
     <string name="ams_content_desc_add_new_stock">Add New Stock</string>
 
     <!-- MyStocksActivity - RecyclerView Item -->

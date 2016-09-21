@@ -106,8 +106,6 @@ public class StockTaskService extends GcmTaskService{
 
                 } else {
 
-                    //DatabaseUtils.dumpCursor(initQueryCursor);
-
                     initQueryCursor.moveToFirst();
 
                     final int symbolColumnIndex =

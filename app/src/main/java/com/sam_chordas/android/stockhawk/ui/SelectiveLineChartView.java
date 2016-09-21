@@ -69,7 +69,7 @@ public final class SelectiveLineChartView extends LineChartView {
     public void onDrawChart(Canvas canvas, ArrayList<ChartSet> data) {
         super.onDrawChart(canvas, data);
 
-        if (selectedEntry != NO_DATA && selectedEntry != DESELECT_POINT) {
+        if (selectedEntry != NO_DATA && selectedEntry != DESELECT_POINT && selectedEntry != LOADING) {
             LineSet lineSet = (LineSet) data.get(0);
             Point dot = (Point) lineSet.getEntry(selectedEntry);
 

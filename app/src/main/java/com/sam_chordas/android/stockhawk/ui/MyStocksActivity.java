@@ -80,7 +80,6 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         mLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setEmptyView(findViewById(R.id.ams_empty_view));
-        getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
 
         mCursorAdapter = new QuoteCursorAdapter(this, null);
         recyclerView.setAdapter(mCursorAdapter);
@@ -116,6 +115,8 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
             // are updated.
             GcmNetworkManager.getInstance(this).schedule(periodicTask);
         }
+
+        getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
 
     }
 
@@ -174,6 +175,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
 
         switch (id) {
             case R.id.action_settings:
+                //Unused
                 break;
             case R.id.action_change_units:
                 // this is for changing stock changes from percent value to dollar value
@@ -206,7 +208,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
                 projection,
                 where,
                 whereArgs,
-                null);
+                QuoteColumns._ID);
     }
 
     @Override

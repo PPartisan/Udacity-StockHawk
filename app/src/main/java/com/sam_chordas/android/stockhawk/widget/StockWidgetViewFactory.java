@@ -38,8 +38,8 @@ class StockWidgetViewFactory implements RemoteViewsService.RemoteViewsFactory {
         final long identityToken = clearCallingIdentity();
 
         final String[] projection = {
-                "Distinct " + QuoteColumns.SYMBOL,
                 QuoteColumns._ID,
+                QuoteColumns.SYMBOL,
                 QuoteColumns.BIDPRICE,
                 QuoteColumns.PERCENT_CHANGE,
                 QuoteColumns.CHANGE,
@@ -137,4 +137,5 @@ class StockWidgetViewFactory implements RemoteViewsService.RemoteViewsFactory {
     public boolean hasStableIds() {
         return true;
     }
+    
 }
