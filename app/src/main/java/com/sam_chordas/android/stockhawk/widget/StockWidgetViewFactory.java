@@ -137,5 +137,5 @@ class StockWidgetViewFactory implements RemoteViewsService.RemoteViewsFactory {
     public boolean hasStableIds() {
         return true;
     }
-    
+
 }
